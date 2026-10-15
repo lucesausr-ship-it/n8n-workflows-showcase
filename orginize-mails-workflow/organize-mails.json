@@ -1,0 +1,1501 @@
+{
+  "name": "organize mails",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        -160
+      ],
+      "id": "891d03fd-0c97-48b3-8fcb-a36ce59c2189",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 100,
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -672,
+        -160
+      ],
+      "id": "d7c5b460-d534-4923-ac47-b5de9f737862",
+      "name": "Get many messages",
+      "webhookId": "bbda6ac7-d38b-485c-a03b-0237df15fdb1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CfKMvL71bbUpWzqf",
+          "name": "Gmail account luce.s.aus.r"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        608,
+        -176
+      ],
+      "id": "d38bb79c-c7db-4867-842b-6f99e8333865",
+      "name": "Delete a message",
+      "webhookId": "2ed02163-e8b5-4973-9e66-8e7cff0bb0cf",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CfKMvL71bbUpWzqf",
+          "name": "Gmail account luce.s.aus.r"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2dff9848-c5a6-413c-b6b5-75c8c39e47bf",
+              "leftValue": "={{ $json.answers.delete_mail.noul * 100 }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        336,
+        -160
+      ],
+      "id": "078aabb2-1031-4b1a-8d7f-aa5bf236dff9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "jev-latest",
+          "cachedResultName": "jev-latest"
+        },
+        "stateText": "={{ JSON.stringify({\n  mail: {\n    absender: $json.From ?? \"\",\n    betreff: $json.subject ?? \"\",\n    vorschau: $json.snippet ?? \"\"\n  }\n}) }}",
+        "questions": {
+          "question": [
+            {
+              "id": "delete_mail",
+              "instructions": "whether or not the E-mail can be deleted without any negative effect",
+              "trueMeans": "delete the Mail",
+              "falseMeans": "mail remains in inbox"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@typesafe-ai/n8n-nodes-typesafe-ai.typeSafeAi",
+      "typeVersion": 1,
+      "position": [
+        80,
+        -160
+      ],
+      "id": "d4afe4ba-4bd2-4218-9b58-bfe1dc9cba34",
+      "name": "Noul - check whether to delete or not",
+      "credentials": {
+        "typeSafeAiApi": {
+          "id": "wxPEUAcISmpfddlt",
+          "name": "TypeSafe AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "route",
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "jev-latest",
+          "cachedResultName": "jev-latest"
+        },
+        "stateFormat": "json",
+        "stateJson": "={{ JSON.stringify({\n  mail: {\n    absender: $json.From ?? \"\",\n    betreff: $json.subject ?? \"\",\n    vorschau: $json.snippet ?? \"\"\n  }\n}) }}",
+        "routeInstructions": "Welcher Kategorie gehört die E-Mail in `mail` an? Entscheide anhand von Absender, Betreff und Vorschau. Wenn kein Merkmal eindeutig ist, wähle \"unklar\".",
+        "routes": {
+          "route": [
+            {
+              "name": "wichtig",
+              "description": "Persönliche Nachrichten von echten Personen, Behörden, Arbeit, Verträge, Termine, Mails die mich direkt ansprechen oder eine Antwort erwarten"
+            },
+            {
+              "name": "beleg",
+              "description": "Rechnungen, Bestell- und Versandbestätigungen, Zahlungsbelege, Buchungsbestätigungen"
+            },
+            {
+              "name": "newsletter",
+              "description": "Werbung, Rabattaktionen, Newsletter, Marketing-Mails, Angebote"
+            },
+            {
+              "name": "benachrichtigung",
+              "description": "Automatische Hinweise von Apps und Diensten, Social-Media-Benachrichtigungen, Login- und Sicherheitsmeldungen, Systemmails"
+            },
+            {
+              "name": "unklar",
+              "description": "Passt zu keiner der anderen Kategorien oder ist nicht eindeutig zuzuordnen"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@typesafe-ai/n8n-nodes-typesafe-ai.typeSafeAi",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        -208
+      ],
+      "id": "36c0f7cf-259b-4468-927a-ac50e49a881c",
+      "name": "label mails",
+      "credentials": {
+        "typeSafeAiApi": {
+          "id": "wxPEUAcISmpfddlt",
+          "name": "TypeSafe AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_1451544893986432475"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        -528
+      ],
+      "id": "2664577a-14f5-4171-9830-e57e64b2ae45",
+      "name": "Add wichtig label",
+      "webhookId": "b43ce9c0-be52-42a4-a26f-4602ac193415",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CfKMvL71bbUpWzqf",
+          "name": "Gmail account luce.s.aus.r"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id }}",
+        "labelIds": [
+          "Label_1410112888192815494"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        -336
+      ],
+      "id": "7ad5d2c2-dd27-4523-8c52-73602e2bfbc8",
+      "name": "Add beleg label",
+      "webhookId": "7d470aff-bd92-495a-ad63-02373087354b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "CfKMvL71bbUpWzqf",
+          "name": "Gmail account luce.s.aus.r"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Noul - check whether to delete or not": [
+      {
+        "json": {
+          "id": "1a1412134e640ffa",
+          "threadId": "1a1412134e640ffa",
+          "snippet": "Google-Kontodaten im Blick behalten luce.s.aus.r@gmail.com Sie erhalten diese E-Mail, weil Sie sich bei Claude am 15. Oktober um 21:54 mit „Über Google anmelden“ angemeldet haben. In dieser E-Mail",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 81873,
+          "historyId": "1915887",
+          "internalDate": "1792094057000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "Subject": "Sie haben einige Google-Kontodaten mit Claude geteilt",
+          "From": "Google <noreply-accounts@google.com>",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.52
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "1a14120d1df22b04",
+          "threadId": "1a14120d1df22b04",
+          "snippet": "Sign in to Claude Console Click the button below to finish signing in. This link expires in 10 minutes. Sign in If you didn't request this email, you can safely ignore it. Need a hand? Contact",
+          "payload": {
+            "mimeType": "text/html"
+          },
+          "sizeEstimate": 27977,
+          "historyId": "1915797",
+          "internalDate": "1792094031000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "From": "Anthropic <no-reply-rSQgdH6QeTRzWp7UjXryZw@mail.anthropic.com>",
+          "Subject": "Your secure link to the Claude Console is here | 2026-10-15 21:53:51",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.41
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "id": "1a1297d049929199",
+          "threadId": "1a1297d049929199",
+          "snippet": "Finde heraus, was du alles verpasst hast. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 131982,
+          "historyId": "1915006",
+          "internalDate": "1791697421000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "Subject": "Es ist schon eine Weile her. Das ist alles neu bei Gemini",
+          "From": "Google Gemini <google-gemini-noreply@google.com>",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.68
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.68
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "id": "1a1251b39f9b9f09",
+          "threadId": "1a1251b39f9b9f09",
+          "snippet": "Was wir herausgefunden haben und was das für dich bedeutet. ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 44638,
+          "historyId": "1914882",
+          "internalDate": "1791623902000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_PROMOTIONS",
+              "name": "CATEGORY_PROMOTIONS"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "From": "ASOS <hello@official.asos.com>",
+          "To": "luce.s.aus.r@gmail.com",
+          "Subject": "Neuigkeiten zur unbefugten ASOS-Benachrichtigung",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.49
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.45
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 3
+        }
+      },
+      {
+        "json": {
+          "id": "1a11cf007c79d4c9",
+          "threadId": "1a11cf007c79d4c9",
+          "snippet": "Google-Kontodaten im Blick behalten luce.s.aus.r@gmail.com Sie erhalten diese E-Mail, weil Sie sich bei pockethost-whitelabel.firebaseapp.com am 8. Oktober um 21:14 mit „Über Google anmelden“",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 80637,
+          "historyId": "1914266",
+          "internalDate": "1791486854000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "Subject": "Sie haben einige Google-Kontodaten mit pockethost-whitelabel.firebaseapp.com geteilt",
+          "From": "Google <noreply-accounts@google.com>",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.54
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 4
+        }
+      },
+      {
+        "json": {
+          "id": "1a11ceffe3bbb216",
+          "threadId": "1a11ceffe3bbb216",
+          "snippet": "xREALM Logo Confirm your email Please confirm this email belongs to your xREALM account. It's how we make sure server invites, billing info and important updates actually reach you, and not some",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 9391,
+          "historyId": "1914254",
+          "internalDate": "1791486851000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            }
+          ],
+          "From": "XREALM <verify@xrealm.com>",
+          "To": "luce.s.aus.r@gmail.com",
+          "Subject": "Confirm your email",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.16
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 5
+        }
+      },
+      {
+        "json": {
+          "id": "1a118160f63557c0",
+          "threadId": "1a118160f63557c0",
+          "snippet": "Google-Kontodaten im Blick behalten luce.s.aus.r@gmail.com Sie erhalten diese E-Mail, weil Sie sich bei typesafe.ai am 7. Oktober um 22:37 mit „Über Google anmelden“ angemeldet haben. In dieser E-Mail",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 81010,
+          "historyId": "1913778",
+          "internalDate": "1791405460000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "Subject": "Sie haben einige Google-Kontodaten mit typesafe.ai geteilt",
+          "From": "Google <noreply-accounts@google.com>",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.53
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 6
+        }
+      },
+      {
+        "json": {
+          "id": "1a108703739d5c63",
+          "threadId": "1a108703739d5c63",
+          "snippet": "Photo 20,00 € Das Mitglied jirgephin hat deinen Artikel “Jeans Hose in blau Levis 501 W33L32” favorisiert! Mach den ersten Schritt und mach ihm/ihr ein Angebot! Jetzt anschreiben Instagram Tiktok Diese",
+          "payload": {
+            "mimeType": "text/html"
+          },
+          "sizeEstimate": 15301,
+          "historyId": "1912132",
+          "internalDate": "1791142933000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            }
+          ],
+          "Subject": "Dein Artikel Jeans Hose in blau Levis 501 W33L32 wurde soeben favorisiert",
+          "From": "Vinted-Team <no-reply@vinted.de>",
+          "To": "<luce.s.aus.r@gmail.com>",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.97
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.5
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 7
+        }
+      },
+      {
+        "json": {
+          "id": "1a0e97424873f28f",
+          "threadId": "1a0e97424873f28f",
+          "snippet": "Ich habe mich getrennt. Nach 12 Jahren... ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 27633,
+          "historyId": "1909842",
+          "internalDate": "1790623095000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "CATEGORY_SOCIAL",
+              "name": "CATEGORY_SOCIAL"
+            }
+          ],
+          "To": "Luca Sandstede <luce.s.aus.r@gmail.com>",
+          "Subject": "💬 Sophie Keirat hat kommentiert: Reborn",
+          "From": "Sophie auf Facebook <close_friend_updates@facebookmail.com>",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.8
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.47
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 8
+        }
+      },
+      {
+        "json": {
+          "id": "1a0dd4a0806910f2",
+          "threadId": "1a0dd4a0806910f2",
+          "snippet": "Photo 25,00 € Das Mitglied malik_005 hat deinen Artikel “Hoodie Creme Weiß / Beige Ravani Berlin Herren XL” favorisiert! Mach den ersten Schritt und mach ihm/ihr ein Angebot! Jetzt anschreiben",
+          "payload": {
+            "mimeType": "text/html"
+          },
+          "sizeEstimate": 15365,
+          "historyId": "1909408",
+          "internalDate": "1790419011000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            }
+          ],
+          "Subject": "Dein Artikel Hoodie Creme Weiß / Beige Ravani Berlin Herren XL wurde soeben favorisiert",
+          "From": "Vinted-Team <no-reply@vinted.de>",
+          "To": "<luce.s.aus.r@gmail.com>",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.99
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.43
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 9
+        }
+      },
+      {
+        "json": {
+          "id": "1a0abf98ae3a9c8d",
+          "threadId": "1a0abf98ae3a9c8d",
+          "snippet": "Invite teammates to collaborate on projects and branches together. ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 29211,
+          "historyId": "1907125",
+          "internalDate": "1789591651000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "CATEGORY_PROMOTIONS",
+              "name": "CATEGORY_PROMOTIONS"
+            }
+          ],
+          "Subject": "Invite your team to your new organization",
+          "From": "Neon Team <customer-team@neon.tech>",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.87
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.47
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 10
+        }
+      },
+      {
+        "json": {
+          "id": "1a0a7e2e018afe15",
+          "threadId": "1a0a7e2e018afe15",
+          "snippet": "We're writing to let you know about changes to our controls for AI crawlers taking effect today and rolling out over the coming week ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏ ͏",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 54715,
+          "historyId": "1906895",
+          "internalDate": "1789523058000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            }
+          ],
+          "To": "luce.s.aus.r@gmail.com",
+          "From": "Cloudflare <em@em1.cloudflare.com>",
+          "Subject": "Updates to managing AI crawlers on your account",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.97
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.43
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 11
+        }
+      },
+      {
+        "json": {
+          "id": "1a0882b24c1ff6b2",
+          "threadId": "1a0882b24c1ff6b2",
+          "snippet": "New sign-in details for your OpenAI account. Hello, We noticed a new sign-in to your OpenAI account. App: ChatGPT Web Time: September 09, 2026 at 11:12 PM (CEST) Approximate location: Lübeck, DE Device",
+          "payload": {
+            "mimeType": "text/html"
+          },
+          "sizeEstimate": 15295,
+          "historyId": "1905381",
+          "internalDate": "1788990922000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_PERSONAL",
+              "name": "CATEGORY_PERSONAL"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "From": "OpenAI <noreply@tm.openai.com>",
+          "Subject": "New sign-in to your OpenAI account",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.26
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 12
+        }
+      },
+      {
+        "json": {
+          "id": "1a08827419d7b347",
+          "threadId": "1a08827419d7b347",
+          "snippet": "Google-Kontodaten im Blick behalten luce.s.aus.r@gmail.com Sie erhalten diese E-Mail, weil Sie sich bei Claude am 9. September um 23:51 mit „Über Google anmelden“ angemeldet haben. In dieser E-Mail",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 86351,
+          "historyId": "1905505",
+          "internalDate": "1788990668000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            }
+          ],
+          "Subject": "Sie haben einige Google-Kontodaten mit Claude geteilt",
+          "From": "Google <noreply-accounts@google.com>",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.48
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 13
+        }
+      },
+      {
+        "json": {
+          "id": "1a087ff219060d07",
+          "threadId": "1a087ff219060d07",
+          "snippet": "Neon Logo Welcome to Neon Your account has been granted access to these backend primitives: Lakebase Postgres Serverless database with autoscaling, scale to zero, and instant branching. Auth Managed",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 24151,
+          "historyId": "1905347",
+          "internalDate": "1788988038000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            }
+          ],
+          "Subject": "Welcome to Neon - Your account now has access to 5 products",
+          "From": "Neon <product@email.neon.tech>",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.41
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 14
+        }
+      },
+      {
+        "json": {
+          "id": "1a087eccad6568f2",
+          "threadId": "1a087eccad6568f2",
+          "snippet": "Google-Kontodaten im Blick behalten luce.s.aus.r@gmail.com Sie erhalten diese E-Mail, weil Sie sich bei neon.tech am 9. September um 22:47 mit „Über Google anmelden“ angemeldet haben. In dieser E-Mail",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 80943,
+          "historyId": "1905126",
+          "internalDate": "1788986837000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "Subject": "Sie haben einige Google-Kontodaten mit neon.tech geteilt",
+          "From": "Google <noreply-accounts@google.com>",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.56
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 15
+        }
+      },
+      {
+        "json": {
+          "id": "1a06945fc2b31767",
+          "threadId": "1a06945fc2b31767",
+          "snippet": "Microsoft-Konto Neue Apps haben Zugriff auf Ihre Daten Lunar Client wurde mit dem Microsoft-Konto lu**r@gmail.com verbunden. Wenn Sie diesen Zugriff nicht gewährt haben, entfernen Sie die Apps aus",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 14328,
+          "historyId": "1903198",
+          "internalDate": "1788472567000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "From": "Microsoft-Konto-Team <account-security-noreply@accountprotection.microsoft.com>",
+          "Subject": "Neue Apps wurden mit Ihrem Microsoft-Konto verbunden",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.28
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 16
+        }
+      },
+      {
+        "json": {
+          "id": "1a061e1b995f5225",
+          "threadId": "1a061e1b995f5225",
+          "snippet": "Diesen Oktober aktualisieren wir unsere Allgemeinen Geschäftsbedingungen (AGB). ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌ ‌",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 18401,
+          "historyId": "1903044",
+          "internalDate": "1788348577000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "From": "Vinted-Team <no-reply@vinted.de>",
+          "To": "luce.s.aus.r@gmail.com",
+          "Subject": "Lies und akzeptiere unsere neuen AGB",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.5
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.28
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 17
+        }
+      },
+      {
+        "json": {
+          "id": "1a039500b3c343b2",
+          "threadId": "1a039500b3c343b2",
+          "snippet": "In Minuten generieren, verfeinern und exportieren Zum Starten einfach auf einen Chat tippen Probiere diese Wellness-Vorschläge aus. Ich bin nicht in einem Fitnessstudio angemeldet. Erstelle eine 20-",
+          "payload": {
+            "mimeType": "text/html"
+          },
+          "sizeEstimate": 77943,
+          "historyId": "1900961",
+          "internalDate": "1787667941000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "From": "ChatGPT <noreply@email.openai.com>",
+          "Subject": "Einfache Self-Care, mit der du noch heute anfangen kannst",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.26
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.73
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 18
+        }
+      },
+      {
+        "json": {
+          "id": "1a02f1dc41fcfd43",
+          "threadId": "1a02f1dc41fcfd43",
+          "snippet": "Upgraden Sie, um Ihre Dateien länger verfügbar zu halten ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 36875,
+          "historyId": "1900593",
+          "internalDate": "1787496874000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "From": "WeTransfer <noreply@wetransfer.com>",
+          "Subject": "Ein von Ihnen gesendeter Transfer läuft bald ab",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.49
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.47
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 19
+        }
+      },
+      {
+        "json": {
+          "id": "1a029f0b74c7ee11",
+          "threadId": "1a029f0b74c7ee11",
+          "snippet": "Dein Inserat wurde aktualisiert Hallo! Die Änderungen an deinem Inserat (Opel Tigra) wurden erfolgreich übernommen. Schau's dir jetzt an. Inserat ansehen Viel Erfolg beim Fahrzeugverkauf! Dein",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 35983,
+          "historyId": "1900243",
+          "internalDate": "1787410035000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            }
+          ],
+          "From": "AutoScout24 <no-reply@rtm.autoscout24.com>",
+          "To": "<luce.s.aus.r@gmail.com>",
+          "Subject": "Dein Inserat wurde aktualisiert",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.68
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 20
+        }
+      },
+      {
+        "json": {
+          "id": "1a029f039cfa81a8",
+          "threadId": "1a029f039cfa81a8",
+          "snippet": "Dein Inserat ist Online Hallo! Glückwunsch, dein Fahrzeug ist jetzt erfolgreich inseriert und für Millionen Interessenten sichtbar! Um dein Inserat anzusehen, zu bearbeiten oder upzugraden, logge dich",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 34808,
+          "historyId": "1900111",
+          "internalDate": "1787410003000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "From": "AutoScout24 <no-reply@rtm.autoscout24.com>",
+          "To": "<luce.s.aus.r@gmail.com>",
+          "Subject": "Dein Inserat ist online",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.37
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 21
+        }
+      },
+      {
+        "json": {
+          "id": "1a029e9a0ca3e832",
+          "threadId": "1a029e9a0ca3e832",
+          "snippet": "Greife auf exklusive Preisverläufe, Nachfrageeinblicke und vieles mehr zu AutoScout24 Logo Dein Konto wurde bestätigt! Du hast jetzt Zugriff auf exklusive Funktionen, die dir helfen, schneller das",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 49429,
+          "historyId": "1900026",
+          "internalDate": "1787409571000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "To": "luce.s.aus.r@gmail.com",
+          "From": "AutoScout24 - Info <updates@info.autoscout24.com>",
+          "Subject": "Du bist dabei! Dein persönliches AutoScout24-Erlebnis startet jetzt.",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.91
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.54
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 22
+        }
+      },
+      {
+        "json": {
+          "id": "1a029e87a8771fe0",
+          "threadId": "1a029e87a8771fe0",
+          "snippet": "Deine Dateien wurden heruntergeladen. ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 34651,
+          "historyId": "1899949",
+          "internalDate": "1787409496000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "From": "WeTransfer <noreply@wetransfer.com>",
+          "Subject": "lucasandstede@gmail.com hat image00001.jpeg heruntergeladen",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.97
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.59
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 23
+        }
+      },
+      {
+        "json": {
+          "id": "1a029e4f9865348c",
+          "threadId": "1a029e4f9865348c",
+          "snippet": "Google-Kontodaten im Blick behalten luce.s.aus.r@gmail.com Sie erhalten diese E-Mail, weil Sie sich bei autoscout24.com am 22. August um 16:34 mit „Über Google anmelden“ angemeldet haben. In dieser E-",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 81129,
+          "historyId": "1899937",
+          "internalDate": "1787409266000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "Subject": "Sie haben einige Google-Kontodaten mit autoscout24.com geteilt",
+          "From": "Google <noreply-accounts@google.com>",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 1
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.62
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 24
+        }
+      },
+      {
+        "json": {
+          "id": "1a029d642ab6ef44",
+          "threadId": "1a029d642ab6ef44",
+          "snippet": "Ihre Dateien wurden erfolgreich an lucasandstede@gmail.com gesendet ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿ ‌​‍‎‏﻿",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 37137,
+          "historyId": "1899934",
+          "internalDate": "1787408301000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_UPDATES",
+              "name": "CATEGORY_UPDATES"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "From": "WeTransfer <noreply@wetransfer.com>",
+          "Subject": "image00001.jpeg wurde erfolgreich an lucasandstede@gmail.com gesendet",
+          "To": "luce.s.aus.r@gmail.com",
+          "route": {
+            "choice": "benachrichtigung",
+            "confidence": 0.99
+          },
+          "model": "jev-1.13.0",
+          "answers": {
+            "delete_mail": {
+              "noul": 0.49
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 25
+        }
+      }
+    ],
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {},
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "label mails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Delete a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Noul - check whether to delete or not": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "label mails": {
+      "main": [
+        [
+          {
+            "node": "Add wichtig label",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add beleg label",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Noul - check whether to delete or not",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Noul - check whether to delete or not",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Noul - check whether to delete or not",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d24ee6ea-1a88-4db6-84ff-013da9371e26",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "37ceca2acdedda834a61db23e98f48f665f72018e40d64818824183106781f46"
+  },
+  "nodeGroups": [],
+  "id": "fpwRQYxgNZGsMeZt",
+  "tags": []
+}
